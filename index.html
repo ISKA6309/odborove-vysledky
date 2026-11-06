@@ -442,6 +442,14 @@ summary { padding: 20px 0; font-weight: 700; cursor: pointer; }
 .archive-title p:last-child { color: var(--muted); margin: 0; }
 .tabs { flex-wrap: wrap; }
 @media (max-width: 600px) { .archive-shell { padding: 25px 18px 50px; } .archive-title h1 { font-size: 27px; } .header-status { display: none; } }
+.archive-shell .similarity-difference strong { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .archive-shell .similarity-difference > div { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .archive-shell .similarity-legend { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .archive-shell .similarity-legend-scale { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+  .archive-shell .similarity-legend > span:last-child { text-align: right; }
+  .archive-shell .similarity-detail h2 { font-size: 22px; }
+}
 </style></head>
 <body>
 <header class="site-header"><a class="brand" href="#tab=overall"><span class="brand-lockup"><span class="brand-mark" role="img" aria-label="Tatra banka"></span></span><span class="brand-divider" aria-hidden="true"></span><span class="brand-title">Spoznaj svoj odbor</span></a><div class="header-actions"><span class="header-status">Výsledky kvízu</span><button id="theme-toggle" class="icon-btn" type="button" aria-label="Prepnúť tému"></button></div></header>
@@ -583,7 +591,14 @@ app.addEventListener('change', event => {
 });
 app.addEventListener('click', event => {
   const cell = event.target.closest('[data-similarity-left]');
-  if (cell) { similarityPair = similarityKey(cell.dataset.similarityLeft, cell.dataset.similarityRight); render(); }
+  if (!cell) return;
+  similarityPair = similarityKey(cell.dataset.similarityLeft, cell.dataset.similarityRight);
+  const preview = document.createElement('template');
+  preview.innerHTML = departmentSimilarityView();
+  app.querySelector('.similarity-detail').replaceWith(preview.content.querySelector('.similarity-detail'));
+  app.querySelectorAll('.similarity-cell').forEach(button => {
+    button.setAttribute('aria-pressed', String(similarityKey(button.dataset.similarityLeft, button.dataset.similarityRight) === similarityPair));
+  });
 });
 const system = matchMedia('(prefers-color-scheme: dark)');
 let theme;
