@@ -2,7 +2,7 @@
 <html lang="sk">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow"><meta name="description" content="Spoločné výsledky kvízu odboru SME bankovníctva.">
-<title>Spoznaj svoj odbor · Výsledky</title>
+<title>Spoznaj svoj odbor · Výsledky V2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -450,6 +450,35 @@ summary { padding: 20px 0; font-weight: 700; cursor: pointer; }
   .archive-shell .similarity-legend > span:last-child { text-align: right; }
   .archive-shell .similarity-detail h2 { font-size: 22px; }
 }
+
+.center-bar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); position: relative; height: 20px; gap: 0; }
+.center-bar::after { content: ''; position: absolute; top: -4px; bottom: -4px; left: 50%; width: 2px; transform: translateX(-1px); background: var(--ink); opacity: .65; }
+.center-half { display: flex; min-width: 0; height: 20px; background: var(--mint); }
+.center-half--a { justify-content: flex-end; border-radius: 3px 0 0 3px; }
+.center-half--b { justify-content: flex-start; border-radius: 0 3px 3px 0; }
+.center-half span { display: block; height: 100%; flex: 0 0 auto; }
+.center-half--a span { background: var(--vote-a); border-radius: 3px 0 0 3px; }
+.center-half--b span { background: var(--vote-b); border-radius: 0 3px 3px 0; }
+.center-bar.no-votes::after { opacity: .3; }
+.vote-meta { display: grid; grid-template-columns: 42px minmax(0, 1fr) 42px; }
+.vote-meta > span:last-child { text-align: right; }
+.vote-meta small { overflow-wrap: anywhere; }
+.archive-shell .similarity-differences { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+.comparison-question { min-width: 0; padding: 20px 0 0; border-top: 1px solid var(--line); }
+.comparison-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.comparison-heading h3 { margin: 0; font-size: 18px; }
+.comparison-gap { color: var(--muted); font-size: 12px; }
+.comparison-department { margin-top: 20px; min-width: 0; }
+.comparison-department h4 { margin: 0 0 12px; font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+.comparison-department .vote-row { padding: 0; border: 0; }
+.comparison-department .vote-labels { font-size: 14px; }
+@media (min-width: 800px) { .comparison-department { max-width: 740px; } }
+@media (max-width: 600px) {
+  .comparison-heading { display: block; }
+  .comparison-gap { display: block; margin-top: 6px; }
+  .vote-labels { gap: 16px; }
+  .vote-labels strong { max-width: calc(50% - 8px); }
+}
 </style></head>
 <body>
 <header class="site-header"><a class="brand" href="#tab=overall"><span class="brand-lockup"><span class="brand-mark" role="img" aria-label="Tatra banka"></span></span><span class="brand-divider" aria-hidden="true"></span><span class="brand-title">Spoznaj svoj odbor</span></a><div class="header-actions"><span class="header-status">Výsledky kvízu</span><button id="theme-toggle" class="icon-btn" type="button" aria-label="Prepnúť tému"></button></div></header>
@@ -478,6 +507,11 @@ const percent = (value) => value === null ? '—' : `${Math.round(value)} %`;
 const slovakPluralRules = new Intl.PluralRules('sk');
 const plural = (count, one, few, other, fraction = few) => ({ one, few, other, many: fraction })[slovakPluralRules.select(count)];
 const tags = (values) => `<div class="tags">${values.map((value) => `<span>${escapeHtml(value)}</span>`).join('')}</div>`;
+function centeredBar(row) {
+  const left = row.valid ? Math.max(0, Math.min(100, row.percentageA ?? 0)) : 0;
+  const right = row.valid ? Math.max(0, Math.min(100, row.percentageB ?? 0)) : 0;
+  return `<div class="center-bar ${row.valid ? '' : 'no-votes'}" role="img" aria-label="${escapeHtml(row.optionA)} ${percent(row.percentageA)}, ${escapeHtml(row.optionB)} ${percent(row.percentageB)}"><div class="center-half center-half--a"><span style="width:${left}%"></span></div><div class="center-half center-half--b"><span style="width:${right}%"></span></div></div>`;
+}
 function voteRow(row) {
   const winner = row.valid > 0 && row.countA !== row.countB ? row.countA > row.countB ? 'A' : 'B' : null;
   const optionLabel = (option, side) => {
@@ -485,8 +519,8 @@ function voteRow(row) {
     return side === 'B' ? `${check}${escapeHtml(option)}` : `${escapeHtml(option)}${check}`;
   };
   return `<article class="vote-row"><div class="vote-labels"><strong>${optionLabel(row.optionA, 'A')}</strong><strong>${optionLabel(row.optionB, 'B')}</strong></div>
-    <div class="vote-bar ${row.valid ? '' : 'no-votes'}" role="img" aria-label="${escapeHtml(row.optionA)} ${percent(row.percentageA)}, ${escapeHtml(row.optionB)} ${percent(row.percentageB)}"><span style="width:${row.percentageA ?? 0}%"></span></div>
-    <div class="vote-meta"><span>${percent(row.percentageA)}</span><small>${row.valid} ${plural(row.valid, 'odpoveď', 'odpovede', 'odpovedí')} · ${row.countNull} bez odpovede</small><span>${percent(row.percentageB)}</span></div></article>`;
+    ${centeredBar(row)}
+    <div class="vote-meta"><span>${percent(row.percentageA)}</span><small>${row.valid} ${plural(row.valid, 'odpoveď', 'odpovede', 'odpovedí')} · ${row.countNull} bez odpovede${row.valid && !winner ? ' · Remíza' : ''}</small><span>${percent(row.percentageB)}</span></div></article>`;
 }
 function profileView(profile, title, section = 'all', scope = 'overall', collapsible = false) {
   const rows = section === 'unanimous' ? profile.unanimous : section === 'balanced' ? profile.balanced : profile.rows;
@@ -542,7 +576,11 @@ function departmentSimilarityView() {
     const percentageA = question[`${side}PercentageA`];
     return `Remíza · ${percent(percentageA)} ${html(question.optionA)} / ${percent(100 - percentageA)} ${html(question.optionB)}`;
   };
-  const differenceRows = differences.length ? differences.map((question) => `<article class="similarity-difference"><h3>${html(question.optionA)} / ${html(question.optionB)}</h3><div><span>${html(selected.leftName)}</span><strong>${preferenceSummary(question, 'left')}</strong><small>${question.leftValid} ${plural(question.leftValid, 'odpoveď', 'odpovede', 'odpovedí')}</small></div><div><span>${html(selected.rightName)}</span><strong>${preferenceSummary(question, 'right')}</strong><small>${question.rightValid} ${plural(question.rightValid, 'odpoveď', 'odpovede', 'odpovedí')}</small></div></article>`).join('') : '<p class="muted">Oddelenia majú rovnaké rozdelenie odpovedí na porovnateľných otázkach.</p>';
+  const differenceRows = differences.length ? differences.map((question) => {
+    const left = results.departments.find(department => department.id === selected.leftId).profile.rows.find(row => row.id === question.questionId);
+    const right = results.departments.find(department => department.id === selected.rightId).profile.rows.find(row => row.id === question.questionId);
+    return `<article class="comparison-question"><div class="comparison-heading"><h3>${html(question.optionA)} / ${html(question.optionB)}</h3><span class="comparison-gap">Rozdiel preferencií: ${Math.round(question.difference)} p. b.</span></div><section class="comparison-department"><h4>${html(selected.leftName)}</h4>${voteRow(left)}</section><section class="comparison-department"><h4>${html(selected.rightName)}</h4>${voteRow(right)}</section></article>`;
+  }).join('') : '<p class="muted">Oddelenia majú rovnaké rozdelenie odpovedí na porovnateľných otázkach.</p>';
   return `<section class="similarity-view">
     <div class="similarity-highlights"><div><span>Najpodobnejšie</span><strong>${pairLabel(mostSimilar)}</strong><small>${mostSimilar.similarity} % · ${mostSimilar.commonQuestionCount} ${plural(mostSimilar.commonQuestionCount, 'otázka', 'otázky', 'otázok')}</small></div><div><span>Najodlišnejšie</span><strong>${pairLabel(mostDifferent)}</strong><small>${mostDifferent.similarity} % · ${mostDifferent.commonQuestionCount} ${plural(mostDifferent.commonQuestionCount, 'otázka', 'otázky', 'otázok')}</small></div></div>
     <div class="similarity-legend"><span>Nižšia podobnosť (${similarityScale.minimum} %)</span><span class="similarity-legend-scale" aria-hidden="true"></span><span>Vyššia podobnosť (${similarityScale.maximum} %)</span></div>
